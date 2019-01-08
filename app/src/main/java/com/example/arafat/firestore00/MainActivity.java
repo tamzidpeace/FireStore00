@@ -16,9 +16,9 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.SetOptions;
 
 import java.util.HashMap;
@@ -67,7 +67,8 @@ public class MainActivity extends AppCompatActivity {
                     String title = documentSnapshot.getString(KEY_TITLE);
                     String description = documentSnapshot.getString(KEY_DESCRIPTION);
                     loadNotesTextView.setText("Title: " + title + "\n" + "Description: " + description);
-
+                } else {
+                    loadNotesTextView.setText("");
                 }
 
             }
@@ -138,8 +139,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void deleteDescription(View view) {
+        noteRef.update(KEY_DESCRIPTION, FieldValue.delete());
     }
 
     public void deleteNote(View view) {
+        noteRef.delete();
     }
 }
