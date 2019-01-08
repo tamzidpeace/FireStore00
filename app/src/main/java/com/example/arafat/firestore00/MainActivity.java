@@ -19,6 +19,7 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.SetOptions;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -127,4 +128,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void updateDescription(View view) {
+
+        String updateDesc = descriptionEditText.getText().toString().trim();
+
+        Map<String, Object> desc = new HashMap<>();
+        desc.put(KEY_DESCRIPTION, updateDesc);
+        noteRef.set(desc, SetOptions.merge());
+    }
+
+    public void deleteDescription(View view) {
+    }
+
+    public void deleteNote(View view) {
+    }
 }

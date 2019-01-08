@@ -46,6 +46,33 @@
         android:textSize="20sp"
         android:onClick="loadNotes"/>
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:text="Update Description"
+        android:textAllCaps="false"
+        android:textSize="20sp"
+        android:onClick="updateDescription"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:text="Delete Description"
+        android:textAllCaps="false"
+        android:textSize="20sp"
+        android:onClick="deleteDescription"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:text="Delete Note"
+        android:textAllCaps="false"
+        android:textSize="20sp"
+        android:onClick="deleteNote"/>
+
     <TextView
         android:id="@+id/load_notes_text_view"
         android:layout_width="match_parent"
