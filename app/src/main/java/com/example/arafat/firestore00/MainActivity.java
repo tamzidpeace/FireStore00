@@ -1,9 +1,11 @@
 package com.example.arafat.firestore00;
 
 
+import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -13,7 +15,10 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private DocumentReference noteRef = db.collection("Notebook").document("My First Note");
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,7 +44,35 @@ public class MainActivity extends AppCompatActivity {
 
         titleEditText = findViewById(R.id.title_edit_text);
         descriptionEditText = findViewById(R.id.description_edit_text);
+        loadNotesTextView = findViewById(R.id.load_notes_text_view);
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        noteRef.addSnapshotListener(this, new EventListener<DocumentSnapshot>() {
+            @SuppressLint("SetTextI18n")
+            @Override
+            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+
+                if (e != null) {
+                    Toast.makeText(MainActivity.this, "error while loading", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "onEvent: " + e.toString());
+                }
+
+                if (documentSnapshot.exists()) {
+
+                    String title = documentSnapshot.getString(KEY_TITLE);
+                    String description = documentSnapshot.getString(KEY_DESCRIPTION);
+                    loadNotesTextView.setText("Title: " + title + "\n" + "Description: " + description);
+
+                }
+
+            }
+        });
+    }
+
 
     public void saveNote(View view) {
 
@@ -51,24 +85,31 @@ public class MainActivity extends AppCompatActivity {
         note.put(KEY_TITLE, title);
         note.put(KEY_DESCRIPTION, description);
 
-        db.collection("Notebook").document("My First Note").set(note);
+        db.collection("Notebook").document("My First Note").set(note)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Toast.makeText(MainActivity.this, "Note Saved", Toast.LENGTH_SHORT).show();
+                    }
+                });
 
     }
 
 
     public void loadNotes(View view) {
-        loadNotesTextView = findViewById(R.id.load_notes_text_view);
+
 
         noteRef.get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @SuppressLint("SetTextI18n")
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
 
-                        if(documentSnapshot.exists()) {
+                        if (documentSnapshot.exists()) {
 
                             String title = documentSnapshot.getString(KEY_TITLE);
                             String description = documentSnapshot.getString(KEY_DESCRIPTION);
-                            loadNotesTextView.setText("Title: " + title + "\n" + "Description: " + description );
+                            loadNotesTextView.setText("Title: " + title + "\n" + "Description: " + description);
 
                         } else {
                             Toast.makeText(MainActivity.this, "Document does not exist", Toast.LENGTH_SHORT).show();
@@ -84,4 +125,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
+
+
 }
