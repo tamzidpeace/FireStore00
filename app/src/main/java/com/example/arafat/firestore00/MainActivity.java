@@ -1,24 +1,22 @@
 package com.example.arafat.firestore00;
 
-
-import android.annotation.SuppressLint;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 
 import java.util.HashMap;
@@ -26,16 +24,14 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
-    private static final String KEY_TITLE = "title";
-    private static final String KEY_DESCRIPTION = "description";
 
-    private EditText titleEditText, descriptionEditText;
+    private EditText titleEditText, descriptionEditText, priorityEditText;
     private TextView loadNotesTextView;
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private DocumentReference noteRef = db.collection("Notebook").document("My First Note");
-
+    private CollectionReference notebookRef = db.collection("Notebook");
+    private DocumentSnapshot lastResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,37 +41,40 @@ public class MainActivity extends AppCompatActivity {
 
         titleEditText = findViewById(R.id.title_edit_text);
         descriptionEditText = findViewById(R.id.description_edit_text);
+        priorityEditText = findViewById(R.id.priority_edit_text);
         loadNotesTextView = findViewById(R.id.load_notes_text_view);
     }
 
-    @Override
+   /* @Override
     protected void onStart() {
         super.onStart();
 
-        noteRef.addSnapshotListener(this, new EventListener<DocumentSnapshot>() {
-            @SuppressLint("SetTextI18n")
+        notebookRef.addSnapshotListener(this, new EventListener<QuerySnapshot>() {
             @Override
-            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+            public void onEvent(QuerySnapshot queryDocumentSnapshots, FirebaseFirestoreException e) {
 
-                if (e != null) {
-                    Toast.makeText(MainActivity.this, "error while loading", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "onEvent: " + e.toString());
-                }
+                String data = "";
 
-                if (documentSnapshot.exists()) {
+                for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
 
                     Notes notes = documentSnapshot.toObject(Notes.class);
+                    notes.setDocumentID(documentSnapshot.getId());
 
+                    String documentID = notes.getDocumentID();
                     String title = notes.getTitle();
-                    String description = notes.getDescription();
-                    loadNotesTextView.setText("Title: " + title + "\n" + "Description: " + description);
-                } else {
-                    loadNotesTextView.setText("");
+                    String desc = notes.getDescription();
+                    int priority = notes.getPriority();
+
+                    data = data + ("DocumentID: " + documentID + "\nTitle: " + title + "\nDescription: " + desc +
+                            "\nPriority: " + priority + "\n\n");
+
                 }
+
+                loadNotesTextView.setText(data);
 
             }
         });
-    }
+    }*/
 
 
     public void saveNote(View view) {
@@ -83,60 +82,69 @@ public class MainActivity extends AppCompatActivity {
         String title = titleEditText.getText().toString().trim();
         String description = descriptionEditText.getText().toString().trim();
 
-        //Toast.makeText(this, title + " " + description, Toast.LENGTH_SHORT).show();
+        if (priorityEditText.length() == 0) {
+            priorityEditText.setText("0");
+        }
 
-        /*Map<String, Object> note = new HashMap<>();
-        note.put(KEY_TITLE, title);
-        note.put(KEY_DESCRIPTION, description);*/
+        int priority = Integer.parseInt(priorityEditText.getText().toString());
 
-        Notes note = new Notes(title, description);
+        Notes note = new Notes(title, description, priority);
 
 
-        db.collection("Notebook").document("My First Note").set(note)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Toast.makeText(MainActivity.this, "Note Saved", Toast.LENGTH_SHORT).show();
-                    }
-                });
+        notebookRef.add(note);
 
     }
 
 
     public void loadNotes(View view) {
+        Query query;
 
-
-        noteRef.get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @SuppressLint("SetTextI18n")
+        if (lastResult == null) {
+            query = notebookRef.orderBy("priority")
+                    .limit(3);
+        } else {
+            query = notebookRef.orderBy("priority")
+                    .startAfter(lastResult)
+                    .limit(3);
+        }
+        query
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        String data = "";
 
-                        if (documentSnapshot.exists()) {
+                        for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
 
                             Notes notes = documentSnapshot.toObject(Notes.class);
+                            notes.setDocumentID(documentSnapshot.getId());
 
+                            String documentID = notes.getDocumentID();
                             String title = notes.getTitle();
-                            String description = notes.getDescription();
-                            loadNotesTextView.setText("Title: " + title + "\n" + "Description: " + description);
+                            String desc = notes.getDescription();
+                            int priority = notes.getPriority();
 
-                        } else {
-                            Toast.makeText(MainActivity.this, "Document does not exist", Toast.LENGTH_SHORT).show();
+                            data = data + ("DocumentID: " + documentID + "\nTitle: " + title + "\nDescription: " + desc +
+                                    "\nPriority: " + priority + "\n\n");
+
                         }
 
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(MainActivity.this, "Error: " + e, Toast.LENGTH_SHORT).show();
+                        if (queryDocumentSnapshots.size() > 0) {
+                            data += "____________\n\n";
+                            loadNotesTextView.append(data);
+
+                            lastResult = queryDocumentSnapshots.getDocuments()
+                                    .get(queryDocumentSnapshots.size() - 1);
+
+                        }
 
                     }
                 });
     }
 
 
-    public void updateDescription(View view) {
+    // this three method don't work now. because I remove these functionality
+   /* public void updateDescription(View view) {
 
         String updateDesc = descriptionEditText.getText().toString().trim();
 
@@ -153,5 +161,5 @@ public class MainActivity extends AppCompatActivity {
 
     public void deleteNote(View view) {
         noteRef.delete();
-    }
+    }*/
 }

@@ -4,4 +4,5 @@
     <string name="description">description</string>
     <string name="save">save</string>
     <string name="load_notes">Load Notes</string>
+    <string name="priority">priority</string>
 </resources>
