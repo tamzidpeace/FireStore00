@@ -64,8 +64,10 @@ public class MainActivity extends AppCompatActivity {
 
                 if (documentSnapshot.exists()) {
 
-                    String title = documentSnapshot.getString(KEY_TITLE);
-                    String description = documentSnapshot.getString(KEY_DESCRIPTION);
+                    Notes notes = documentSnapshot.toObject(Notes.class);
+
+                    String title = notes.getTitle();
+                    String description = notes.getDescription();
                     loadNotesTextView.setText("Title: " + title + "\n" + "Description: " + description);
                 } else {
                     loadNotesTextView.setText("");
@@ -83,9 +85,12 @@ public class MainActivity extends AppCompatActivity {
 
         //Toast.makeText(this, title + " " + description, Toast.LENGTH_SHORT).show();
 
-        Map<String, Object> note = new HashMap<>();
+        /*Map<String, Object> note = new HashMap<>();
         note.put(KEY_TITLE, title);
-        note.put(KEY_DESCRIPTION, description);
+        note.put(KEY_DESCRIPTION, description);*/
+
+        Notes note = new Notes(title, description);
+
 
         db.collection("Notebook").document("My First Note").set(note)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -109,8 +114,10 @@ public class MainActivity extends AppCompatActivity {
 
                         if (documentSnapshot.exists()) {
 
-                            String title = documentSnapshot.getString(KEY_TITLE);
-                            String description = documentSnapshot.getString(KEY_DESCRIPTION);
+                            Notes notes = documentSnapshot.toObject(Notes.class);
+
+                            String title = notes.getTitle();
+                            String description = notes.getDescription();
                             loadNotesTextView.setText("Title: " + title + "\n" + "Description: " + description);
 
                         } else {
@@ -134,6 +141,8 @@ public class MainActivity extends AppCompatActivity {
         String updateDesc = descriptionEditText.getText().toString().trim();
 
         Map<String, Object> desc = new HashMap<>();
+
+        Notes notes = new Notes();
         desc.put(KEY_DESCRIPTION, updateDesc);
         noteRef.set(desc, SetOptions.merge());
     }
